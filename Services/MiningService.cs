@@ -22,12 +22,6 @@ namespace ConsoleApp1.Services
         public void MineBlock(Block block, int difficulty)
         {
             string transactionsData = string.Concat(block.transactions.Select(t => t.ToRowString()));
-            var prefixString = string.Concat(block.index, block.timestamp, transactionsData, block.previousHash);
-            var prefixBytes = Encoding.UTF8.GetBytes(prefixString);
-
-            int nonceSize = sizeof(int);
-            var buffer = new byte[prefixBytes.Length + nonceSize];
-            Buffer.BlockCopy(prefixBytes, 0, buffer, 0, prefixBytes.Length);
 
             using var sha256 = SHA256.Create();
             var hashBuffer = new byte[32];
@@ -42,10 +36,10 @@ namespace ConsoleApp1.Services
                     Console.Write(".");
                 }
 
-                var span = buffer.AsSpan();
-                BitConverter.TryWriteBytes(span.Slice(prefixBytes.Length, nonceSize), block.nonce);
+                var input = $"{block.index}{block.timestamp}{transactionsData}{block.previousHash}{block.nonce}";
+                var inputBytes = Encoding.UTF8.GetBytes(input);
 
-                sha256.TryComputeHash(span, hashBuffer, out _);
+                sha256.TryComputeHash(inputBytes, hashBuffer, out _);
 
                 bool isValid = ValidateDifficulty(hashBuffer, fullZeroBytes, hasHalfNibble);
 
