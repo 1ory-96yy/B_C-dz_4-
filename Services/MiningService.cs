@@ -22,10 +22,10 @@ namespace ConsoleApp1.Services
         public void MineBlock(Block block, int difficulty)
         {
             string transactionsData = string.Concat(block.transactions.Select(t => t.ToRowString()));
-
             using var sha256 = SHA256.Create();
             var hashBuffer = new byte[32];
 
+            var miningStart = DateTime.UtcNow;
             int fullZeroBytes = difficulty / 2;
             bool hasHalfNibble = (difficulty % 2) != 0;
 
@@ -46,6 +46,7 @@ namespace ConsoleApp1.Services
                 if (isValid)
                 {
                     block.hash = Convert.ToHexString(hashBuffer).ToLower();
+                    block.miningDuration = (DateTime.UtcNow - miningStart).TotalSeconds;
                     break;
                 }
 

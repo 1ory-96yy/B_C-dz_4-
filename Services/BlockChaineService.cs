@@ -60,14 +60,35 @@ namespace ConsoleApp1.Services
             if (recentBlocks.Count == 0)
                 return;
             double averageMiningTime = recentBlocks.Average(x => (x.timestamp - this.chain[x.index - 1].timestamp).TotalSeconds);
-            if (averageMiningTime < _blockGenerationInterval / 2)
+            var prevDifficulty = Difficulty;
+            double lowerThreshold = _blockGenerationInterval / 2.0;
+            double upperThreshold = _blockGenerationInterval * 2.0;
+
+            Console.WriteLine();
+            Console.WriteLine("--- Difficulty adjustment ---");
+            Console.WriteLine($"Recent blocks considered: {recentBlocks.Count}");
+            Console.WriteLine($"Average time between blocks: {averageMiningTime:F2} s");
+            Console.WriteLine($"Target block generation interval: {_blockGenerationInterval} s");
+            Console.WriteLine($"Adjustment rule: if avg < {lowerThreshold} -> increase difficulty by 1; if avg > {upperThreshold} -> decrease by 1 (min 1)");
+
+            if (averageMiningTime < lowerThreshold)
             {
                 Difficulty++;
             }
-            else if (averageMiningTime > _blockGenerationInterval * 2 && Difficulty > 1)
+            else if (averageMiningTime > upperThreshold && Difficulty > 1)
             {
                 Difficulty = Math.Max(1, Difficulty - 1);
             }
+
+            if (Difficulty != prevDifficulty)
+            {
+                Console.WriteLine($"Difficulty changed: {prevDifficulty} -> {Difficulty}");
+            }
+            else
+            {
+                Console.WriteLine($"Difficulty remains: {Difficulty}");
+            }
+            Console.WriteLine("-----------------------------");
         }
 
         public bool IsChainValid()
